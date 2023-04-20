@@ -250,6 +250,7 @@ Sophus::SE3f System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, 
     }
 
     cv::Mat imLeftToFeed, imRightToFeed;
+    /*
     if(settings_ && settings_->needToRectify()){
         cv::Mat M1l = settings_->M1l();
         cv::Mat M2l = settings_->M2l();
@@ -263,10 +264,10 @@ Sophus::SE3f System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, 
         cv::resize(imLeft,imLeftToFeed,settings_->newImSize());
         cv::resize(imRight,imRightToFeed,settings_->newImSize());
     }
-    else{
+    else{*/
         imLeftToFeed = imLeft.clone();
         imRightToFeed = imRight.clone();
-    }
+    //}
 
     // Check mode change
     {
