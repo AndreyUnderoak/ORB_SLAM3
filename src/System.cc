@@ -1412,7 +1412,9 @@ void System::SaveAtlas(int type){
         string pathSaveFileName = "./";
         pathSaveFileName = pathSaveFileName.append(mStrSaveAtlasToFile);
         pathSaveFileName = pathSaveFileName.append(".osa");
-
+      
+        mStrVocabularyFilePath = "Vocabulary/ORBvoc.txt";
+      
         string strVocabularyChecksum = CalculateCheckSum(mStrVocabularyFilePath,TEXT_FILE);
         std::size_t found = mStrVocabularyFilePath.find_last_of("/\\");
         string strVocabularyName = mStrVocabularyFilePath.substr(found+1);
