@@ -218,6 +218,10 @@ void Viewer::Run()
 
     float trackedImageScale = mpTracker->GetImageScale();
 
+    cv::VideoWriter video;
+    video.open("video.avi", cv::VideoWriter::fourcc('M','J','P','G'), 30, cv::Size(640,480), true);
+
+    
     cout << "Starting the Viewer" << endl;
     while(1)
     {
@@ -336,8 +340,11 @@ void Viewer::Run()
         }
 
         cv::imshow("ORB-SLAM3: Current Frame",toShow);
+        cv::resize(toShow, toShow, cv::Size(640, 480));
+        video.write(toShow);
+        
         cv::waitKey(mT);
-
+    
         if(menuReset)
         {
             menuShowGraph = true;
@@ -380,6 +387,10 @@ void Viewer::Run()
             break;
     }
 
+    std::cout<<"Saving video"<<std::endl;
+    video.release();
+    std::cout<<"Video saved"<<std::endl;
+    
     SetFinish();
 }
 
