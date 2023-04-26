@@ -22,6 +22,17 @@
 
 #include <mutex>
 
+#include <signal.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+
+bool menuStop = false;
+static void my_handler(int s){
+           printf("Caught signal %d\n",s);
+           menuStop = true; 
+}
+
 namespace ORB_SLAM3
 {
 
@@ -52,6 +63,8 @@ Viewer::Viewer(System* pSystem, FrameDrawer *pFrameDrawer, MapDrawer *pMapDrawer
         }
     }
 
+    signal(SIGINT, my_handler);
+        
     mbStopTrack = false;
 }
 
@@ -164,7 +177,7 @@ void Viewer::Run()
     mbFinished = false;
     mbStopped = false;
 
-    pangolin::CreateWindowAndBind("ORB-SLAM3: Map Viewer",1024,768);
+    //pangolin::CreateWindowAndBind("ORB-SLAM3: Map Viewer",1024,768);
 
     // 3D Mouse handler requires depth testing to be enabled
     glEnable(GL_DEPTH_TEST);
@@ -172,7 +185,7 @@ void Viewer::Run()
     // Issue specific OpenGl we might need
     glEnable (GL_BLEND);
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
+/*
     pangolin::CreatePanel("menu").SetBounds(0.0,1.0,0.0,pangolin::Attach::Pix(175));
     pangolin::Var<bool> menuFollowCamera("menu.Follow Camera",false,true);
     pangolin::Var<bool> menuCamView("menu.Camera View",false,false);
@@ -204,18 +217,19 @@ void Viewer::Run()
     Twc.SetIdentity();
     pangolin::OpenGlMatrix Ow; // Oriented with g in the z axis
     Ow.SetIdentity();
+  */
     cv::namedWindow("ORB-SLAM3: Current Frame");
 
     bool bFollow = true;
     bool bLocalizationMode = false;
     bool bStepByStep = false;
     bool bCameraView = true;
-
+/*
     if(mpTracker->mSensor == mpSystem->MONOCULAR || mpTracker->mSensor == mpSystem->STEREO || mpTracker->mSensor == mpSystem->RGBD)
     {
         menuShowGraph = true;
     }
-
+*/
     float trackedImageScale = mpTracker->GetImageScale();
 
     cv::VideoWriter video;
@@ -226,7 +240,7 @@ void Viewer::Run()
     while(1)
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+/*
         mpMapDrawer->GetCurrentOpenGLCameraMatrix(Twc,Ow);
 
         if(mbStopTrack)
@@ -320,7 +334,7 @@ void Viewer::Run()
             mpMapDrawer->DrawMapPoints();
 
         pangolin::FinishFrame();
-
+*/
         cv::Mat toShow;
         cv::Mat im = mpFrameDrawer->DrawFrame(trackedImageScale);
 
@@ -344,7 +358,7 @@ void Viewer::Run()
         video.write(toShow);
         
         cv::waitKey(mT);
-    
+    /*
         if(menuReset)
         {
             menuShowGraph = true;
@@ -360,7 +374,7 @@ void Viewer::Run()
             mpSystem->ResetActiveMap();
             menuReset = false;
         }
-
+*/
         if(menuStop)
         {
             if(bLocalizationMode)
