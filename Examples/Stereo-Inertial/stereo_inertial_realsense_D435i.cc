@@ -96,7 +96,7 @@ static rs2_option get_sensor_option(const rs2::sensor& sensor)
 
 int main(int argc, char **argv) {
 
-    if (argc < 3 || argc > 4) {
+    if (argc < 4 || argc > 5) {
         cerr << endl
              << "Usage: ./stereo_inertial_realsense_D435i path_to_vocabulary path_to_settings (trajectory_file_name)"
              << endl;
@@ -105,9 +105,17 @@ int main(int argc, char **argv) {
 
     string file_name;
 
-    if (argc == 4) {
+    if (argc == 5) {
         file_name = string(argv[argc - 1]);
     }
+    bool isLocalization = false;
+    std::cout<<"Check mode"<<std::endl;
+    if(argv[3][0] == '1'){
+        isLocalization = true;
+        std::cout<<"Localisation mode"<<std::endl;
+    }
+    else
+        std::cout<<"Mapping mode"<<std::endl;
 
     struct sigaction sigIntHandler;
 
@@ -317,7 +325,7 @@ int main(int argc, char **argv) {
 
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_STEREO, true, 0, file_name);
+    ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_STEREO, true, 0, file_name, isLocalization);
     float imageScale = SLAM.GetImageScale();
 
     double timestamp;
