@@ -39,9 +39,9 @@ namespace ORB_SLAM3
 Verbose::eLevel Verbose::th = Verbose::VERBOSITY_NORMAL;
 
 System::System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor,
-               const bool bUseViewer, const int initFr, const string &strSequence):
+               const bool bUseViewer, const int initFr, const string &strSequence, const bool state_bool):
     mSensor(sensor), mpViewer(static_cast<Viewer*>(NULL)), mbReset(false), mbResetActiveMap(false),
-    mbActivateLocalizationMode(false), mbDeactivateLocalizationMode(false), mbShutDown(false)
+    mbActivateLocalizationMode(state_bool), mbDeactivateLocalizationMode(false), mbShutDown(false)
 {
     // Output welcome message
     cout << endl <<
@@ -65,6 +65,8 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
         cout << "Stereo-Inertial" << endl;
     else if(mSensor==IMU_RGBD)
         cout << "RGB-D-Inertial" << endl;
+    if(mbActivateLocalizationMode)
+        cout << "Localisation MODE"<<endl;
 
     //Check settings file
     cv::FileStorage fsSettings(strSettingsFile.c_str(), cv::FileStorage::READ);
@@ -167,8 +169,13 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
         //cout << "KF in DB: " << mpKeyFrameDatabase->mnNumKFs << "; words: " << mpKeyFrameDatabase->mnNumWords << endl;
 
         loadedAtlas = true;
-
-        mpAtlas->CreateNewMap();
+      
+        //LOAD LOADED MAP!!!
+        if(mbActivateLocalizationMode){
+            vector<Map*> map_vector = mpAtlas->GetAllMaps();
+            mpAtlas->ChangeMap(map_vector.at(0));
+        }else
+          mpAtlas->CreateNewMap();
 
         //clock_t timeElapsed = clock() - start;
         //unsigned msElapsed = timeElapsed / (CLOCKS_PER_SEC / 1000);
