@@ -81,5 +81,5 @@ Viewer.ViewpointY: -0.7
 Viewer.ViewpointZ: -3.5
 Viewer.ViewpointF: 500.0
 
-#System.LoadAtlasFromFile: "atlas_dog_map_0506"
-System.SaveAtlasToFile: "atlas_dog_map_0506"
+#System.LoadAtlasFromFile: "atlas_dog_map_0511"
+System.SaveAtlasToFile: "atlas_dog_map_0511"

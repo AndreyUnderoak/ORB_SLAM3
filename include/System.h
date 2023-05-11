@@ -40,11 +40,16 @@
 #include "ImuTypes.h"
 #include "Settings.h"
 
-#include <octomap/OcTree.h>
+// #include <octomap/OcTree.h>
+// #include <pcl/point_types.h>
+// #include <pcl/octree/octree_pointcloud.h>
+// #include <pcl/point_cloud.h>
+// #include <pcl/octree/octree_pointcloud_voxelcentroid.h>
+
+#include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
-#include <pcl/octree/octree_pointcloud.h>
-#include <pcl/point_cloud.h>
-#include <pcl/octree/octree_pointcloud_voxelcentroid.h>
+#include <octomap/octomap.h>
+
 
 namespace ORB_SLAM3
 {
@@ -191,7 +196,7 @@ public:
 
     float GetImageScale();
 
-    octomap::OcTree  pcl2octomap(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_cloud, double resolution);
+    //octomap::OcTree  pcl2octomap(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_cloud, double resolution);
 
 #ifdef REGISTER_TIMES
     void InsertRectTime(double& time);
