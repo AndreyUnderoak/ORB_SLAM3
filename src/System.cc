@@ -33,6 +33,7 @@
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/archive/xml_oarchive.hpp>
 
+
 namespace ORB_SLAM3
 {
 
@@ -173,7 +174,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
         //LOAD LOADED MAP!!!
         if(mbActivateLocalizationMode){
             vector<Map*> map_vector = mpAtlas->GetAllMaps();
-            mpAtlas->ChangeMap(map_vector.at(0));
+            mpAtlas->ChangeMap(map_vector.at(2));
         }else
           mpAtlas->CreateNewMap();
 
@@ -1449,6 +1450,25 @@ void System::SaveAtlas(int type){
             oa << mpAtlas;
             cout << "End to write save binary file" << endl;
         }
+
+        //Save to Octomap
+        std::vector<MapPoint*> map_points = mpAtlas->GetAllMapPoints();
+        std::cout<<"B1"<<std::endl;
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud = boost::make_shared<pcl::PointCloud<pcl::PointXYZRGB>>();
+        std::cout<<"B2"<<std::endl;
+        for(size_t i = 0; i < map_points.size(); i++){
+            std::cout<<"o"<<i<<std::endl;
+            auto a = map_points[i]->GetWorldPos();
+            std::cout<<"auto"<<a[0]<< a[1]<< a[2]<<std::endl;
+            pcl::PointXYZRGB point(a[0], a[1], a[2]);
+            std::cout<<"push"<<std::endl;
+            point_cloud->push_back(point);
+        }
+        octomap::OcTree  oct_map = pcl2octomap(point_cloud,5);
+        std::cout<<"octostart"<<std::endl;
+        oct_map.write("octomap.bt");
+        oct_map.write("octomap.ot");
+        std::cout<<"octoend"<<std::endl;
     }
 }
 
@@ -1553,6 +1573,24 @@ string System::CalculateCheckSum(string filename, int type)
     }
 
     return checksum;
+}
+
+octomap::OcTree  System::pcl2octomap(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_cloud, double resolution = 5) {
+    // create pcl octree - ultra fast
+    pcl::octree::OctreePointCloudVoxelCentroid<pcl::PointXYZRGB> octree(resolution);
+    octree.setInputCloud(input_cloud);
+    octree.addPointsFromInputCloud();
+    std::vector< pcl::PointXYZRGB, Eigen::aligned_allocator<pcl::PointXYZRGB> > voxel_centers;
+    octree.getOccupiedVoxelCenters(voxel_centers);
+
+    // create octomap instance from pcl octree
+    octomap::OcTree final_octree(resolution);
+    for (const auto & voxel_center: voxel_centers) {
+        final_octree.updateNode(voxel_center.x,voxel_center.y,voxel_center.z,true,false);
+    }
+    final_octree.updateInnerOccupancy();
+
+    return final_octree;
 }
 
 } //namespace ORB_SLAM

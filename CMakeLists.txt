@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(ORB_SLAM3)
 
+set (CMAKE_CXX_STANDARD 14)
+
 IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release)
 ENDIF()
@@ -32,7 +34,7 @@ LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 
 find_package(OpenCV 3.2)
    if(NOT OpenCV_FOUND)
-      message(FATAL_ERROR "OpenCV > 3.2 not found.")
+      message(FATAL_ERROR "OpenCV > 4.4 not found.")
    endif()
 
 MESSAGE("OPENCV VERSION:")
@@ -41,6 +43,8 @@ MESSAGE(${OpenCV_VERSION})
 find_package(Eigen3 3.1.0 REQUIRED)
 find_package(Pangolin REQUIRED)
 find_package(realsense2)
+find_package(PCL 1.3 REQUIRED COMPONENTS common io)
+find_package(octomap REQUIRED)
 
 include_directories(
 ${PROJECT_SOURCE_DIR}
@@ -49,6 +53,8 @@ ${PROJECT_SOURCE_DIR}/include/CameraModels
 ${PROJECT_SOURCE_DIR}/Thirdparty/Sophus
 ${EIGEN3_INCLUDE_DIR}
 ${Pangolin_INCLUDE_DIRS}
+${PCL_INCLUDE_DIRS}
+${OCTOMAP_INCLUDE_DIRS}
 )
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
@@ -118,7 +124,9 @@ add_subdirectory(Thirdparty/g2o)
 target_link_libraries(${PROJECT_NAME}
 ${OpenCV_LIBS}
 ${EIGEN3_LIBS}
+${PCL_LIBRARIES}
 ${Pangolin_LIBRARIES}
+${OCTOMAP_LIBRARIES}
 ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
 ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
 -lboost_serialization

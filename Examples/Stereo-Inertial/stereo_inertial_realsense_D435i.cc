@@ -339,9 +339,11 @@ int main(int argc, char **argv) {
 
     double t_resize = 0.f;
     double t_track = 0.f;
+    int couit = 0;
 
     while (!SLAM.isShutDown())
     {
+        couit++;
         std::vector<rs2_vector> vGyro;
         std::vector<double> vGyro_times;
         std::vector<rs2_vector> vAccel;
@@ -358,8 +360,8 @@ int main(int argc, char **argv) {
             std::chrono::monotonic_clock::time_point time_Start_Process = std::chrono::monotonic_clock::now();
 #endif
 
-            if(count_im_buffer>1)
-                cout << count_im_buffer -1 << " dropped frs\n";
+            // if(count_im_buffer>1)
+            //     cout << count_im_buffer -1 << " dropped frs\n";
             count_im_buffer = 0;
 
             while(v_gyro_timestamp.size() > v_accel_timestamp_sync.size())
@@ -444,8 +446,8 @@ int main(int argc, char **argv) {
         t_track = t_resize + std::chrono::duration_cast<std::chrono::duration<double,std::milli> >(t_End_Track - t_Start_Track).count();
         SLAM.InsertTrackTime(t_track);
 #endif
-
-
+        // if(SLAM.mpAtlas->GetAllKeyFrames().begin() != SLAM.mpAtlas->GetAllKeyFrames().end())
+        //     std::cout<<"Pose: "<<SLAM.mpAtlas->GetAllKeyFrames().back()->GetPose().matrix()<<std::endl;
 
         // Clear the previous IMU measurements to load the new ones
         vImuMeas.clear();
