@@ -4884,7 +4884,6 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame *pFrame, bool bRecInit)
     g2o::OptimizationAlgorithmGaussNewton* solver = new g2o::OptimizationAlgorithmGaussNewton(solver_ptr);
     optimizer.setAlgorithm(solver);
     optimizer.setVerbose(false);
-
     int nInitialMonoCorrespondences=0;
     int nInitialStereoCorrespondences=0;
     int nInitialCorrespondences=0;
@@ -4906,7 +4905,6 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame *pFrame, bool bRecInit)
     VA->setId(3);
     VA->setFixed(false);
     optimizer.addVertex(VA);
-
     // Set MapPoint vertices
     const int N = pFrame->N;
     const int Nleft = pFrame->Nleft;
@@ -4920,13 +4918,11 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame *pFrame, bool bRecInit)
     vpEdgesStereo.reserve(N);
     vnIndexEdgeMono.reserve(N);
     vnIndexEdgeStereo.reserve(N);
-
     const float thHuberMono = sqrt(5.991);
     const float thHuberStereo = sqrt(7.815);
 
     {
         unique_lock<mutex> lock(MapPoint::mGlobalMutex);
-
         for(int i=0; i<N; i++)
         {
             MapPoint* pMP = pFrame->mvpMapPoints[i];
@@ -5032,12 +5028,9 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame *pFrame, bool bRecInit)
             }
         }
     }
-
     nInitialCorrespondences = nInitialMonoCorrespondences + nInitialStereoCorrespondences;
-
     // Set Previous Frame Vertex
     Frame* pFp = pFrame->mpPrevFrame;
-
     VertexPose* VPk = new VertexPose(pFp);
     VPk->setId(4);
     VPk->setFixed(false);
@@ -5054,7 +5047,6 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame *pFrame, bool bRecInit)
     VAk->setId(7);
     VAk->setFixed(false);
     optimizer.addVertex(VAk);
-
     EdgeInertial* ei = new EdgeInertial(pFrame->mpImuPreintegratedFrame);
 
     ei->setVertex(0, VPk);
@@ -5064,26 +5056,26 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame *pFrame, bool bRecInit)
     ei->setVertex(4, VP);
     ei->setVertex(5, VV);
     optimizer.addEdge(ei);
-
     EdgeGyroRW* egr = new EdgeGyroRW();
     egr->setVertex(0,VGk);
     egr->setVertex(1,VG);
     Eigen::Matrix3d InfoG = pFrame->mpImuPreintegrated->C.block<3,3>(9,9).cast<double>().inverse();
     egr->setInformation(InfoG);
     optimizer.addEdge(egr);
-
     EdgeAccRW* ear = new EdgeAccRW();
     ear->setVertex(0,VAk);
     ear->setVertex(1,VA);
     Eigen::Matrix3d InfoA = pFrame->mpImuPreintegrated->C.block<3,3>(12,12).cast<double>().inverse();
     ear->setInformation(InfoA);
     optimizer.addEdge(ear);
+    
+    if(!pFp->mpcpi){
+        std::cout<<to_string(pFp->mnId)<<std::endl;
+    }
 
-    if (!pFp->mpcpi)
-        Verbose::PrintMess("pFp->mpcpi does not exist!!!\nPrevious Frame " + to_string(pFp->mnId), Verbose::VERBOSITY_NORMAL);
-
+    Verbose::PrintMess("pFp->mpcpi does not exist!!!\nPrevious Frame " + to_string(pFp->mnId), Verbose::VERBOSITY_NORMAL);
+    
     EdgePriorPoseImu* ep = new EdgePriorPoseImu(pFp->mpcpi);
-
     ep->setVertex(0,VPk);
     ep->setVertex(1,VVk);
     ep->setVertex(2,VGk);
@@ -5189,7 +5181,6 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame *pFrame, bool bRecInit)
         }
     }
 
-
     if ((nInliers<30) && !bRecInit)
     {
         nBad=0;
@@ -5219,7 +5210,6 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame *pFrame, bool bRecInit)
                 nBad++;
         }
     }
-
     nInliers = nInliersMono + nInliersStereo;
 
 
@@ -5248,6 +5238,7 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame *pFrame, bool bRecInit)
     H.block<3,3>(27,27) += Har.block<3,3>(3,3);
 
     H.block<15,15>(0,0) += ep->GetHessian();
+        
 
     int tot_in = 0, tot_out = 0;
     for(size_t i=0, iend=vpEdgesMono.size(); i<iend; i++)
@@ -5264,7 +5255,6 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame *pFrame, bool bRecInit)
         else
             tot_out++;
     }
-
     for(size_t i=0, iend=vpEdgesStereo.size(); i<iend; i++)
     {
         EdgeStereoOnlyPose* e = vpEdgesStereo[i];
@@ -5279,13 +5269,11 @@ int Optimizer::PoseInertialOptimizationLastFrame(Frame *pFrame, bool bRecInit)
         else
             tot_out++;
     }
-
     H = Marginalize(H,0,14);
 
     pFrame->mpcpi = new ConstraintPoseImu(VP->estimate().Rwb,VP->estimate().twb,VV->estimate(),VG->estimate(),VA->estimate(),H.block<15,15>(15,15));
     delete pFp->mpcpi;
     pFp->mpcpi = NULL;
-
     return nInitialCorrespondences-nBad;
 }
 

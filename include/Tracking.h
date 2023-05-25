@@ -130,6 +130,7 @@ public:
 
     eTrackingState mState;
     eTrackingState mLastProcessedState;
+    bool isReset;
 
     // Input sensor
     int mSensor;

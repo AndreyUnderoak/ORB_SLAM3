@@ -28,7 +28,11 @@
 #include <message_filters/time_synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
 
+#include <tf2_ros/transform_broadcaster.h>
+#include <geometry_msgs/TransformStamped.h>
+
 #include<opencv2/core/core.hpp>
+#include "opencv2/imgcodecs/legacy/constants_c.h"
 
 #include"../../../include/System.h"
 
@@ -39,12 +43,16 @@ class ImageGrabber
 public:
     ImageGrabber(ORB_SLAM3::System* pSLAM):mpSLAM(pSLAM){}
 
-    void GrabStereo(const sensor_msgs::ImageConstPtr& msgLeft,const sensor_msgs::ImageConstPtr& msgRight);
+    void GrabStereo(const sensor_msgs::ImageConstPtr& msgLeft,const sensor_msgs::ImageConstPtr& msgRight,
+                    tf2_ros::TransformBroadcaster& broadcaster, geometry_msgs::TransformStamped& transformStamped,
+                    ros::Rate& rate);
 
     ORB_SLAM3::System* mpSLAM;
     bool do_rectify;
     cv::Mat M1l,M2l,M1r,M2r;
 };
+
+
 
 int main(int argc, char **argv)
 {
@@ -106,12 +114,20 @@ int main(int argc, char **argv)
     }
 
     ros::NodeHandle nh;
-
-    message_filters::Subscriber<sensor_msgs::Image> left_sub(nh, "/camera/left/image_raw", 1);
-    message_filters::Subscriber<sensor_msgs::Image> right_sub(nh, "/camera/right/image_raw", 1);
+    extern ros::NodeHandle sendTFnode;
+    message_filters::Subscriber<sensor_msgs::Image> left_sub(nh, "/camera/infra1/image_rect_raw", 1);
+    message_filters::Subscriber<sensor_msgs::Image> right_sub(nh, "/camera/infra2/image_rect_raw", 1);
     typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image> sync_pol;
     message_filters::Synchronizer<sync_pol> sync(sync_pol(10), left_sub,right_sub);
-    sync.registerCallback(boost::bind(&ImageGrabber::GrabStereo,&igb,_1,_2));
+
+    //FOR SEND
+    tf2_ros::TransformBroadcaster broadcaster;
+    geometry_msgs::TransformStamped transformStamped;
+    ros::Rate rate(10.0);   
+    transformStamped.header.frame_id = "parent_frame";
+    transformStamped.child_frame_id = "child_frame";
+
+    sync.registerCallback(boost::bind(&ImageGrabber::GrabStereo,&igb,_1,_2, broadcaster, transformStamped, rate));
 
     ros::spin();
 
@@ -128,7 +144,9 @@ int main(int argc, char **argv)
     return 0;
 }
 
-void ImageGrabber::GrabStereo(const sensor_msgs::ImageConstPtr& msgLeft,const sensor_msgs::ImageConstPtr& msgRight)
+void ImageGrabber::GrabStereo(const sensor_msgs::ImageConstPtr& msgLeft,const sensor_msgs::ImageConstPtr& msgRight,
+                    tf2_ros::TransformBroadcaster& broadcaster, geometry_msgs::TransformStamped& transformStamped,
+                    ros::Rate& rate)
 {
     // Copy the ros image message to cv::Mat.
     cv_bridge::CvImageConstPtr cv_ptrLeft;
@@ -162,7 +180,25 @@ void ImageGrabber::GrabStereo(const sensor_msgs::ImageConstPtr& msgLeft,const se
     }
     else
     {
-        mpSLAM->TrackStereo(cv_ptrLeft->image,cv_ptrRight->image,cv_ptrLeft->header.stamp.toSec());
+        Sophus::SE3f last_tf = mpSLAM->TrackStereo(cv_ptrLeft->image,cv_ptrRight->image,cv_ptrLeft->header.stamp.toSec());
+        Eigen::Quaterniond quaternion(last_tf.rotationMatrix().cast<double>());
+        Eigen::Vector3f translation = last_tf.translation();
+
+
+        transformStamped.header.stamp = ros::Time::now();
+
+        transformStamped.transform.translation.x = translation.x();
+        transformStamped.transform.translation.y = translation.y();
+        transformStamped.transform.translation.z = translation.z();
+
+        transformStamped.transform.rotation.x = quaternion.x();
+        transformStamped.transform.rotation.y = quaternion.y();
+        transformStamped.transform.rotation.z = quaternion.z();
+        transformStamped.transform.rotation.w = quaternion.w();
+
+        broadcaster.sendTransform(transformStamped);
+
+        rate.sleep();
     }
 
 }

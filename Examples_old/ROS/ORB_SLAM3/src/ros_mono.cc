@@ -26,6 +26,7 @@
 #include <cv_bridge/cv_bridge.h>
 
 #include<opencv2/core/core.hpp>
+#include "opencv2/imgcodecs/legacy/constants_c.h"
 
 #include"../../../include/System.h"
 

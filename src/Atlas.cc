@@ -86,6 +86,7 @@ void Atlas::ChangeMap(Map* pMap)
 
     mpCurrentMap = pMap;
     mpCurrentMap->SetCurrentMap();
+    mpCurrentMap->IncreaseChangeIndex();
 }
 
 unsigned long int Atlas::GetLastInitKFid()

@@ -28,6 +28,7 @@
 #include <condition_variable>
 
 #include <opencv2/core/core.hpp>
+#include "opencv2/imgcodecs/legacy/constants_c.h"
 
 #include <librealsense2/rs.hpp>
 #include "librealsense2/rsutil.h"
@@ -416,8 +417,7 @@ int main(int argc, char **argv) {
             int height = im.rows * imageScale;
             cv::resize(im, im, cv::Size(width, height));
             cv::resize(imRight, imRight, cv::Size(width, height));
-
-#ifdef REGISTER_TIMES
+    #ifdef REGISTER_TIMES
     #ifdef COMPILEDWITHC11
             std::chrono::steady_clock::time_point t_End_Resize = std::chrono::steady_clock::now();
     #else

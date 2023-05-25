@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.4.6)
 include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 
+set (CMAKE_CXX_STANDARD 14)
+
 rosbuild_init()
 
 IF(NOT ROS_BUILD_TYPE)
@@ -30,7 +32,7 @@ endif()
 
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../cmake_modules)
 
-find_package(OpenCV 3.0 QUIET)
+find_package(OpenCV 4.2)
 if(NOT OpenCV_FOUND)
    find_package(OpenCV 2.4.3 QUIET)
    if(NOT OpenCV_FOUND)
@@ -40,19 +42,41 @@ endif()
 
 find_package(Eigen3 3.1.0 REQUIRED)
 find_package(Pangolin REQUIRED)
+find_package(realsense2)
+find_package(PCL 1.3 REQUIRED COMPONENTS common io)
+find_package(catkin REQUIRED COMPONENTS 
+  roscpp
+  sensor_msgs
+  message_generation
+  tf
+  tf2
+  geometry_msgs
+  )
+find_package(octomap REQUIRED)
+find_package(Boost COMPONENTS system)
 
 include_directories(
 ${PROJECT_SOURCE_DIR}
 ${PROJECT_SOURCE_DIR}/../../../
 ${PROJECT_SOURCE_DIR}/../../../include
 ${PROJECT_SOURCE_DIR}/../../../include/CameraModels
+${PROJECT_SOURCE_DIR}/../../../Thirdparty/Sophus
 ${Pangolin_INCLUDE_DIRS}
+${EIGEN3_INCLUDE_DIR}
+${PCL_INCLUDE_DIRS}
+${catkin_INCLUDE_DIRS}
+${OCTOMAP_INCLUDE_DIRS}
+${Boost_INCLUDE_DIRS}
 )
 
 set(LIBS 
 ${OpenCV_LIBS} 
 ${EIGEN3_LIBS}
+${PCL_LIBRARIES}
+${catkin_LIBRARIES}
+${OCTOMAP_LIBRARIES}
 ${Pangolin_LIBRARIES}
+${Boost_LIBRARIES}
 ${PROJECT_SOURCE_DIR}/../../../Thirdparty/DBoW2/lib/libDBoW2.so
 ${PROJECT_SOURCE_DIR}/../../../Thirdparty/g2o/lib/libg2o.so
 ${PROJECT_SOURCE_DIR}/../../../lib/libORB_SLAM3.so
@@ -69,15 +93,15 @@ ${LIBS}
 )
 
 # Node for monocular camera (Augmented Reality Demo)
-rosbuild_add_executable(MonoAR
-src/AR/ros_mono_ar.cc
-src/AR/ViewerAR.h
-src/AR/ViewerAR.cc
-)
+# rosbuild_add_executable(MonoAR
+# src/AR/ros_mono_ar.cc
+# src/AR/ViewerAR.h
+# src/AR/ViewerAR.cc
+# )
 
-target_link_libraries(MonoAR
-${LIBS}
-)
+# target_link_libraries(MonoAR
+# ${LIBS}
+# )
 
 # Node for stereo camera
 rosbuild_add_executable(Stereo

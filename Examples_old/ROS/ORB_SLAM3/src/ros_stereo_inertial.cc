@@ -30,6 +30,10 @@
 #include<sensor_msgs/Imu.h>
 
 #include<opencv2/core/core.hpp>
+#include "opencv2/imgcodecs/legacy/constants_c.h"
+
+#include <tf2_ros/transform_broadcaster.h>
+#include <geometry_msgs/TransformStamped.h>
 
 #include"../../../include/System.h"
 #include"../include/ImuTypes.h"
@@ -49,7 +53,16 @@ public:
 class ImageGrabber
 {
 public:
-    ImageGrabber(ORB_SLAM3::System* pSLAM, ImuGrabber *pImuGb, const bool bRect, const bool bClahe): mpSLAM(pSLAM), mpImuGb(pImuGb), do_rectify(bRect), mbClahe(bClahe){}
+    tf2_ros::TransformBroadcaster broadcaster;
+    geometry_msgs::TransformStamped transformStamped;
+    ros::Rate rate = ros::Rate(10.0);
+
+    ImageGrabber(ORB_SLAM3::System* pSLAM, ImuGrabber *pImuGb, const bool bRect, const bool bClahe): 
+    mpSLAM(pSLAM), mpImuGb(pImuGb), do_rectify(bRect), mbClahe(bClahe){
+      transformStamped.header.frame_id = "parent_frame";
+      transformStamped.child_frame_id = "child_frame";
+      
+    }
 
     void GrabImageLeft(const sensor_msgs::ImageConstPtr& msg);
     void GrabImageRight(const sensor_msgs::ImageConstPtr& msg);
@@ -92,8 +105,10 @@ int main(int argc, char **argv)
       bEqual = true;
   }
 
+  string filename;
+
   // Create SLAM system. It initializes all system threads and gets ready to process frames.
-  ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_STEREO,true);
+  ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_STEREO, true, 0, filename, true);
 
   ImuGrabber imugb;
   ImageGrabber igb(&SLAM,&imugb,sbRect == "true",bEqual);
@@ -138,9 +153,10 @@ int main(int argc, char **argv)
     }
 
   // Maximum delay, 5 seconds
-  ros::Subscriber sub_imu = n.subscribe("/imu", 1000, &ImuGrabber::GrabImu, &imugb); 
-  ros::Subscriber sub_img_left = n.subscribe("/camera/left/image_raw", 100, &ImageGrabber::GrabImageLeft,&igb);
-  ros::Subscriber sub_img_right = n.subscribe("/camera/right/image_raw", 100, &ImageGrabber::GrabImageRight,&igb);
+  ros::Subscriber sub_imu = n.subscribe("/camera/imu", 1, &ImuGrabber::GrabImu, &imugb); 
+  ros::Subscriber sub_img_left = n.subscribe("/camera/infra1/image_rect_raw", 1, &ImageGrabber::GrabImageLeft,&igb);
+  ros::Subscriber sub_img_right = n.subscribe("/camera/infra2/image_rect_raw", 1, &ImageGrabber::GrabImageRight,&igb);
+
 
   std::thread sync_thread(&ImageGrabber::SyncWithImu,&igb);
 
@@ -195,7 +211,7 @@ cv::Mat ImageGrabber::GetImage(const sensor_msgs::ImageConstPtr &img_msg)
 
 void ImageGrabber::SyncWithImu()
 {
-  const double maxTimeDiff = 0.01;
+  const double maxTimeDiff = 0.1;
   while(1)
   {
     cv::Mat imLeft, imRight;
@@ -267,7 +283,32 @@ void ImageGrabber::SyncWithImu()
         cv::remap(imRight,imRight,M1r,M2r,cv::INTER_LINEAR);
       }
 
-      mpSLAM->TrackStereo(imLeft,imRight,tImLeft,vImuMeas);
+      Sophus::SE3f last_tf = mpSLAM->TrackStereo(imLeft,imRight,tImLeft,vImuMeas);
+      last_tf = last_tf.inverse();
+
+      Eigen::Quaterniond quaternion(last_tf.rotationMatrix().cast<double>());
+      Eigen::Vector3f translation = last_tf.translation();
+      // last_tf = convertion_tf*last_tf;
+
+      // //rotate by x
+      // Eigen::Quaterniond rotation(
+      //   std::sqrt(0.5), std::sqrt(0.5), 0.0, 0.0
+      // );
+
+      transformStamped.header.stamp = ros::Time::now();
+
+      transformStamped.transform.translation.x = translation.x();
+      transformStamped.transform.translation.y = translation.y();
+      transformStamped.transform.translation.z = translation.z();
+
+      transformStamped.transform.rotation.x = quaternion.x();
+      transformStamped.transform.rotation.y = quaternion.y();
+      transformStamped.transform.rotation.z = quaternion.z();
+      transformStamped.transform.rotation.w = quaternion.w();
+
+      broadcaster.sendTransform(transformStamped);
+
+      rate.sleep();
 
       std::chrono::milliseconds tSleep(1);
       std::this_thread::sleep_for(tSleep);

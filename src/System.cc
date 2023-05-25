@@ -176,7 +176,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
         //LOAD LOADED MAP!!!
         if(mbActivateLocalizationMode){
             vector<Map*> map_vector = mpAtlas->GetAllMaps();
-            mpAtlas->ChangeMap(map_vector.at(0));
+            mpAtlas->ChangeMap(map_vector.at(1));
         }else
           mpAtlas->CreateNewMap();
 
@@ -323,10 +323,10 @@ Sophus::SE3f System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, 
         for(size_t i_imu = 0; i_imu < vImuMeas.size(); i_imu++)
             mpTracker->GrabImuData(vImuMeas[i_imu]);
 
-    // std::cout << "start GrabImageStereo" << std::endl;
+    std::cout << "start GrabImageStereo" << std::endl;
     Sophus::SE3f Tcw = mpTracker->GrabImageStereo(imLeftToFeed,imRightToFeed,timestamp,filename);
 
-    // std::cout << "out grabber" << std::endl;
+    std::cout << "out grabber" << std::endl;
 
     unique_lock<mutex> lock2(mMutexState);
     mTrackingState = mpTracker->mState;

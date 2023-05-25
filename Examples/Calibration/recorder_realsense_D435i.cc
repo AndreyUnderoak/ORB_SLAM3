@@ -30,6 +30,7 @@
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui.hpp>
+#include "opencv2/imgcodecs/legacy/constants_c.h"
 
 #include <librealsense2/rs.hpp>
 #include "librealsense2/rsutil.h"
@@ -123,26 +124,26 @@ int main(int argc, char **argv) {
     std::vector<rs2::sensor> sensors = selected_device.query_sensors();
     int index = 0;
     // We can now iterate the sensors and print their names
-    for (rs2::sensor sensor : sensors)
-        if (sensor.supports(RS2_CAMERA_INFO_NAME)) {
-            ++index;
-            if (index == 1) {
-                sensor.set_option(RS2_OPTION_ENABLE_AUTO_EXPOSURE, 1);
-                sensor.set_option(RS2_OPTION_AUTO_EXPOSURE_LIMIT,5000);
-                sensor.set_option(RS2_OPTION_EMITTER_ENABLED, 0);
-            }
-            // std::cout << "  " << index << " : " << sensor.get_info(RS2_CAMERA_INFO_NAME) << std::endl;
-            get_sensor_option(sensor);
-            if (index == 2){
-                // RGB camera
-                sensor.set_option(RS2_OPTION_EXPOSURE,100.f);
-            }
+    // for (rs2::sensor sensor : sensors)
+    //     if (sensor.supports(RS2_CAMERA_INFO_NAME)) {
+    //         ++index;
+    //         if (index == 1) {
+    //             sensor.set_option(RS2_OPTION_ENABLE_AUTO_EXPOSURE, 1);
+    //             sensor.set_option(RS2_OPTION_AUTO_EXPOSURE_LIMIT,5000);
+    //             sensor.set_option(RS2_OPTION_EMITTER_ENABLED, 0);
+    //         }
+    //         // std::cout << "  " << index << " : " << sensor.get_info(RS2_CAMERA_INFO_NAME) << std::endl;
+    //         get_sensor_option(sensor);
+    //         if (index == 2){
+    //             // RGB camera
+    //             sensor.set_option(RS2_OPTION_EXPOSURE,100.f);
+    //         }
 
-            if (index == 3){
-                sensor.set_option(RS2_OPTION_ENABLE_MOTION_CORRECTION,0);
-            }
+    //         if (index == 3){
+    //             sensor.set_option(RS2_OPTION_ENABLE_MOTION_CORRECTION,0);
+    //         }
 
-        }
+    //     }
 
     // Declare RealSense pipeline, encapsulating the actual device and sensors
     rs2::pipeline pipe;

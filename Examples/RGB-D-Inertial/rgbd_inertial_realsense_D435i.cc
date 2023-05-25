@@ -28,6 +28,7 @@
 #include <condition_variable>
 
 #include <opencv2/core/core.hpp>
+#include "opencv2/imgcodecs/legacy/constants_c.h"
 
 #include <librealsense2/rs.hpp>
 #include "librealsense2/rsutil.h"
