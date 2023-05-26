@@ -176,7 +176,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
         //LOAD LOADED MAP!!!
         if(mbActivateLocalizationMode){
             vector<Map*> map_vector = mpAtlas->GetAllMaps();
-            mpAtlas->ChangeMap(map_vector.at(1));
+            mpAtlas->ChangeMap(map_vector.at(0));
         }else
           mpAtlas->CreateNewMap();
 
@@ -1453,23 +1453,23 @@ void System::SaveAtlas(int type){
             cout << "End to write save binary file" << endl;
         }
 
-        //Save to Octomap GPT
-        octomap::OcTree tree(0.05); // разрешение octomap
+        // //Save to Octomap GPT
+        // octomap::OcTree tree(0.05); // разрешение octomap
 
-        std::vector<MapPoint*> map_points = mpAtlas->GetAllMapPoints();
-        std::cout<<"B1"<<std::endl;
+        // std::vector<MapPoint*> map_points = mpAtlas->GetAllMapPoints();
+        // std::cout<<"B1"<<std::endl;
 
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud = boost::make_shared<pcl::PointCloud<pcl::PointXYZRGB>>();
+        // pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud = boost::make_shared<pcl::PointCloud<pcl::PointXYZRGB>>();
 
-        for(size_t i = 0; i < map_points.size(); i++){
-            auto a = map_points[i]->GetWorldPos();
-            pcl::PointXYZRGB point(a[0], a[1], a[2]);
-            point_cloud->push_back(point);
-            tree.updateNode(octomap::point3d(a[0], a[1], a[2]), true);
-        }
+        // for(size_t i = 0; i < map_points.size(); i++){
+        //     auto a = map_points[i]->GetWorldPos();
+        //     pcl::PointXYZRGB point(a[0], a[1], a[2]);
+        //     point_cloud->push_back(point);
+        //     tree.updateNode(octomap::point3d(a[0], a[1], a[2]), true);
+        // }
 
-        tree.writeBinary("dog_oct_05_11.bt");
-        pcl::io::savePCDFileBinary("dog_cloud_05_11.pcd", *point_cloud);
+        // tree.writeBinary("dog_oct_05_11.bt");
+        // pcl::io::savePCDFileBinary("dog_cloud_05_11.pcd", *point_cloud);
         // //Save to Octomap
         // std::vector<MapPoint*> map_points = mpAtlas->GetAllMapPoints();
         // std::cout<<"B1"<<std::endl;
