@@ -1453,7 +1453,7 @@ bool Tracking::GetStepByStep()
 
 Sophus::SE3f Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat &imRectRight, const double &timestamp, string filename)
 {
-    cout << "GrabImageStereo" << endl;
+    //cout << "GrabImageStereo" << endl;
 
     mImGray = imRectLeft;
     cv::Mat imGrayRight = imRectRight;
@@ -1461,7 +1461,7 @@ Sophus::SE3f Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat 
 
     if(mImGray.channels()==3)
     {
-        cout << "Image with 3 channels" << endl;
+        //cout << "Image with 3 channels" << endl;
         if(mbRGB)
         {
             cvtColor(mImGray,mImGray,cv::COLOR_RGB2GRAY);
@@ -1475,7 +1475,7 @@ Sophus::SE3f Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat 
     }
     else if(mImGray.channels()==4)
     {
-        cout << "Image with 4 channels" << endl;
+        //cout << "Image with 4 channels" << endl;
         if(mbRGB)
         {
             cvtColor(mImGray,mImGray,cv::COLOR_RGBA2GRAY);
@@ -1488,7 +1488,7 @@ Sophus::SE3f Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat 
         }
     }
 
-    cout << "Incoming frame creation" << endl;
+    //cout << "Incoming frame creation" << endl;
 
     if (mSensor == System::STEREO && !mpCamera2)
         mCurrentFrame = Frame(mImGray,imGrayRight,timestamp,mpORBextractorLeft,mpORBextractorRight,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,mpCamera);
@@ -1499,7 +1499,7 @@ Sophus::SE3f Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat 
     else if(mSensor == System::IMU_STEREO && mpCamera2)
         mCurrentFrame = Frame(mImGray,imGrayRight,timestamp,mpORBextractorLeft,mpORBextractorRight,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,mpCamera,mpCamera2,mTlr,&mLastFrame,*mpImuCalib);
 
-    cout << "Incoming frame ended" << endl;
+    //cout << "Incoming frame ended" << endl;
 
     mCurrentFrame.mNameFile = filename;
     mCurrentFrame.mnDataset = mnNumDataset;
@@ -1509,10 +1509,15 @@ Sophus::SE3f Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat 
     vdStereoMatch_ms.push_back(mCurrentFrame.mTimeStereoMatch);
 #endif
 
-    cout << "Tracking start" << endl;
+    //cout << "Tracking start" << endl;
     Track();
-    cout << "Tracking end" << endl;
-
+    //cout << "Tracking end" << endl;
+    if((mState == LOST || mState == RECENTLY_LOST) && mbOnlyTracking){
+        // beforeLostFrame.SetImuPoseVelocity(mLastFrame.mpLastKeyFrame->GetImuRotation(),
+        //                               mLastFrame.mpLastKeyFrame->GetImuPosition(),
+        //                               mLastFrame.mpLastKeyFrame->GetVelocity());
+        return beforeLostFrame.GetPose();
+    }
     return mCurrentFrame.GetPose();
 }
 
@@ -1794,6 +1799,7 @@ void Tracking::ResetFrameIMU()
 
 void Tracking::Track()
 {
+    //hardSetPose = false;
 
     if (bStepByStep)
     {
@@ -1815,6 +1821,7 @@ void Tracking::Track()
     {
         cout << "ERROR: There is not an active map in the atlas" << endl;
     }
+
 
     if(mState!=NO_IMAGES_YET)
     {
@@ -1971,7 +1978,6 @@ void Tracking::Track()
             }
             else
             {
-
                 if (mState == RECENTLY_LOST)
                 {
                     Verbose::PrintMess("Lost for a short time", Verbose::VERBOSITY_NORMAL);
@@ -2029,9 +2035,36 @@ void Tracking::Track()
             // Localization Mode: Local Mapping is deactivated (TODO Not available in inertial mode)
             if(mState==LOST || mState == RECENTLY_LOST)
             {
-                if(mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO || mSensor == System::IMU_RGBD)
-                    Verbose::PrintMess("IMU. State LOST", Verbose::VERBOSITY_NORMAL);
-                bOK = Relocalization();
+                // if(mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO || mSensor == System::IMU_RGBD){
+                //     Verbose::PrintMess("IMU. State LOST", Verbose::VERBOSITY_NORMAL);
+                //     std::cout<<"NOT RELOC GO TO IF"<<std::endl;
+                //     if (mpAtlas->isImuInitialized() && (mCurrentFrame.mnId>mnLastRelocFrameId+mnFramesToResetIMU))
+                //     {
+                //         std::cout<<"FIRST"<<std::endl;
+                //         // Predict state with IMU if it is initialized and it doesnt need reset
+                //         PredictStateIMU();
+                //     }
+                //     else
+                //     {
+                //         std::cout<<"SECOND"<<std::endl;
+                //         mCurrentFrame.SetPose(mVelocity * mLastFrame.GetPose());
+                //     }
+                // }
+                std::cout<<"RELOk"<<std::endl;
+                if(mLastFrame.isSet())
+                    beforeLostFrame = Frame(mLastFrame);
+                bOK = Relocalization();  
+                // if(!bOK){
+                //     mCurrentFrame.SetPose(mLastFrame.GetPose()); 
+                //     //hardSetPose = true;
+                // }
+                // else{
+                //     hardSetPose = false;
+                //     if(mpLastKeyFrame)
+                //         mpLastKeyFrame = static_cast<KeyFrame*>(NULL);
+                // }
+                    
+                std::cout<<bOK<<std::endl;
             }
             else
             {
@@ -2126,9 +2159,9 @@ void Tracking::Track()
             // a local map and therefore we do not perform TrackLocalMap(). Once the system relocalizes
             // the camera we will use the local map again.
             if(bOK && !mbVO){
-                std::cout<<"TrackLocal START"<<std::endl;
+                //std::cout<<"TrackLocal START"<<std::endl;
                 bOK = TrackLocalMap();
-                std::cout<<"TrackLocal END"<<std::endl;
+                //std::cout<<"TrackLocal END"<<std::endl;
             }
         }
 
@@ -2154,7 +2187,7 @@ void Tracking::Track()
             {*/
             mTimeStampLost = mCurrentFrame.mTimeStamp;
             //}
-        }
+        } 
         // Save frame if recent relocalization, since they are used for IMU reset (as we are making copy, it shluld be once mCurrFrame is completely modified)
         if((mCurrentFrame.mnId<(mnLastRelocFrameId+mnFramesToResetIMU)) && (mCurrentFrame.mnId > mnFramesToResetIMU) &&
            (mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO || mSensor == System::IMU_RGBD) && pCurrentMap->isImuInitialized())
@@ -2180,6 +2213,7 @@ void Tracking::Track()
                     mLastBias = mCurrentFrame.mImuBias;
             }
         }
+
 #ifdef REGISTER_TIMES
         std::chrono::steady_clock::time_point time_EndLMTrack = std::chrono::steady_clock::now();
 
@@ -2193,11 +2227,12 @@ void Tracking::Track()
         if(bOK || mState==RECENTLY_LOST)
         {
             // Update motion model
-            if(mLastFrame.isSet() && mCurrentFrame.isSet())
+            if(mLastFrame.isSet() && mCurrentFrame.isSet() /*&& !hardSetPose*/)
             {
                 Sophus::SE3f LastTwc = mLastFrame.GetPose().inverse();
                 mVelocity = mCurrentFrame.GetPose() * LastTwc;
                 mbVelocity = true;
+
             }
             else {
                 mbVelocity = false;
@@ -2216,7 +2251,6 @@ void Tracking::Track()
                         mCurrentFrame.mvpMapPoints[i]=static_cast<MapPoint*>(NULL);
                     }
             }
-
             // Delete temporal MapPoints
             for(list<MapPoint*>::iterator lit = mlpTemporalPoints.begin(), lend =  mlpTemporalPoints.end(); lit!=lend; lit++)
             {
@@ -2228,7 +2262,6 @@ void Tracking::Track()
             std::chrono::steady_clock::time_point time_StartNewKF = std::chrono::steady_clock::now();
 #endif
             bool bNeedKF = NeedNewKeyFrame();
-
             // Check if we need to insert a new keyframe
             // if(bNeedKF && bOK)
             if(bNeedKF && (bOK || (mInsertKFsLost && mState==RECENTLY_LOST &&
@@ -2276,7 +2309,6 @@ void Tracking::Track()
             mCurrentFrame.mpReferenceKF = mpReferenceKF;
         mLastFrame = Frame(mCurrentFrame);
     }
-
 
 
     if(mState==OK || mState==RECENTLY_LOST)

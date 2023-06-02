@@ -132,6 +132,9 @@ public:
     eTrackingState mLastProcessedState;
     bool isReset;
 
+    bool hardSetPose;
+    Frame beforeLostFrame;
+
     // Input sensor
     int mSensor;
 

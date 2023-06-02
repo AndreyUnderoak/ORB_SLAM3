@@ -81,5 +81,5 @@ Viewer.ViewpointY: -0.7
 Viewer.ViewpointZ: -3.5
 Viewer.ViewpointF: 500.0
 
-System.LoadAtlasFromFile: "for_octomap_501_nn"
+System.LoadAtlasFromFile: "laboratory_osa_05_22"
 #System.SaveAtlasToFile: "for_octomap_501_nn"

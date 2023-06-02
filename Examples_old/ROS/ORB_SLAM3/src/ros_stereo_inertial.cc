@@ -57,10 +57,17 @@ public:
     geometry_msgs::TransformStamped transformStamped;
     ros::Rate rate = ros::Rate(10.0);
 
-    ImageGrabber(ORB_SLAM3::System* pSLAM, ImuGrabber *pImuGb, const bool bRect, const bool bClahe): 
+    ImageGrabber(ORB_SLAM3::System* pSLAM, ImuGrabber *pImuGb, const bool bRect, const bool bClahe, const bool isLocalisation): 
     mpSLAM(pSLAM), mpImuGb(pImuGb), do_rectify(bRect), mbClahe(bClahe){
-      transformStamped.header.frame_id = "parent_frame";
-      transformStamped.child_frame_id = "child_frame";
+      if(isLocalisation){
+        transformStamped.header.frame_id = "parent_frame";  // parent_frame
+        transformStamped.child_frame_id  = "child_frame";   // child_frame
+      }
+      else{
+        transformStamped.header.frame_id = "orb_static_frame";  // parent_frame
+        transformStamped.child_frame_id  = "orb_dynamic_frame";   // child_frame
+      }
+      
       
     }
 
@@ -92,26 +99,36 @@ int main(int argc, char **argv)
   bool bEqual = false;
   if(argc < 4 || argc > 5)
   {
-    cerr << endl << "Usage: rosrun ORB_SLAM3 Stereo_Inertial path_to_vocabulary path_to_settings do_rectify [do_equalize]" << endl;
+    cerr << endl << "Usage: rosrun ORB_SLAM3 Stereo_Inertial path_to_vocabulary path_to_settings do_rectify [islocalisation==1/0] //[do_equalize]" << endl;
     ros::shutdown();
     return 1;
   }
 
   std::string sbRect(argv[3]);
+  // if(argc==5)
+  // {
+  //   std::string sbEqual(argv[4]);
+  //   if(sbEqual == "true")
+  //     bEqual = true;
+  // }
+  bool isLocalization = false;
   if(argc==5)
   {
-    std::string sbEqual(argv[4]);
-    if(sbEqual == "true")
-      bEqual = true;
+    if(argv[4][0] == '1'){
+        isLocalization = true;
+        std::cout<<"Localisation mode"<<std::endl;
+    }
+    else
+        std::cout<<"Mapping mode"<<std::endl;
   }
 
   string filename;
 
   // Create SLAM system. It initializes all system threads and gets ready to process frames.
-  ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_STEREO, true, 0, filename, true);
+  ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_STEREO, true, 0, filename, isLocalization);
 
   ImuGrabber imugb;
-  ImageGrabber igb(&SLAM,&imugb,sbRect == "true",bEqual);
+  ImageGrabber igb(&SLAM,&imugb,sbRect == "true",bEqual, isLocalization);
   
     if(igb.do_rectify)
     {      
@@ -300,6 +317,8 @@ void ImageGrabber::SyncWithImu()
       transformStamped.transform.translation.x = translation.x();
       transformStamped.transform.translation.y = translation.y();
       transformStamped.transform.translation.z = translation.z();
+
+      std::cout << translation.x() << std::endl;
 
       transformStamped.transform.rotation.x = quaternion.x();
       transformStamped.transform.rotation.y = quaternion.y();
