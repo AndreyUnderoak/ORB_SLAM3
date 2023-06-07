@@ -99,7 +99,7 @@ int main(int argc, char **argv)
   bool bEqual = false;
   if(argc < 4 || argc > 5)
   {
-    cerr << endl << "Usage: rosrun ORB_SLAM3 Stereo_Inertial path_to_vocabulary path_to_settings do_rectify [islocalisation==1/0] //[do_equalize]" << endl;
+    cerr << endl << "Usage: rosrun ORB_SLAM3 Stereo_Inertial path_to_vocabulary path_to_settings do_rectify islocalisation[1/0] //[do_equalize]" << endl;
     ros::shutdown();
     return 1;
   }
@@ -112,10 +112,12 @@ int main(int argc, char **argv)
   //     bEqual = true;
   // }
   bool isLocalization = false;
+  int queue_imu_size = 1;
   if(argc==5)
   {
     if(argv[4][0] == '1'){
         isLocalization = true;
+        queue_imu_size = 100;
         std::cout<<"Localisation mode"<<std::endl;
     }
     else
@@ -170,7 +172,7 @@ int main(int argc, char **argv)
     }
 
   // Maximum delay, 5 seconds
-  ros::Subscriber sub_imu = n.subscribe("/camera/imu", 100, &ImuGrabber::GrabImu, &imugb); 
+  ros::Subscriber sub_imu = n.subscribe("/camera/imu", queue_imu_size, &ImuGrabber::GrabImu, &imugb); 
   ros::Subscriber sub_img_left = n.subscribe("/camera/infra1/image_rect_raw", 1, &ImageGrabber::GrabImageLeft,&igb);
   ros::Subscriber sub_img_right = n.subscribe("/camera/infra2/image_rect_raw", 1, &ImageGrabber::GrabImageRight,&igb);
 

@@ -2161,9 +2161,9 @@ void Tracking::Track()
             // a local map and therefore we do not perform TrackLocalMap(). Once the system relocalizes
             // the camera we will use the local map again.
             if(bOK && !mbVO){
-                std::cout<<"TrackLocal START"<<std::endl;
+                //std::cout<<"TrackLocal START"<<std::endl;
                 bOK = TrackLocalMap();
-                std::cout<<"TrackLocal END"<<std::endl;
+                //std::cout<<"TrackLocal END"<<std::endl;
             }
         }
 

@@ -32,6 +32,9 @@
 #include<opencv2/core/core.hpp>
 #include "opencv2/imgcodecs/legacy/constants_c.h"
 
+#include <tf2_ros/transform_broadcaster.h>
+#include <geometry_msgs/TransformStamped.h>
+
 #include"../../../include/System.h"
 #include"../include/ImuTypes.h"
 
@@ -50,7 +53,17 @@ public:
 class ImageGrabber
 {
 public:
-    ImageGrabber(ORB_SLAM3::System* pSLAM, ImuGrabber *pImuGb, const bool bClahe): mpSLAM(pSLAM), mpImuGb(pImuGb), mbClahe(bClahe){}
+    ImageGrabber(ORB_SLAM3::System* pSLAM, ImuGrabber *pImuGb, const bool bClahe, const bool isLocalisation):
+    mpSLAM(pSLAM), mpImuGb(pImuGb), mbClahe(bClahe){
+      if(isLocalisation){
+        transformStamped.header.frame_id = "parent_frame";  // parent_frame
+        transformStamped.child_frame_id  = "child_frame";   // child_frame
+      }
+      else{
+        transformStamped.header.frame_id = "orb_static_frame";  // parent_frame
+        transformStamped.child_frame_id  = "orb_dynamic_frame";   // child_frame
+      }
+    }
 
     void GrabImage(const sensor_msgs::ImageConstPtr& msg);
     cv::Mat GetImage(const sensor_msgs::ImageConstPtr &img_msg);
@@ -76,28 +89,35 @@ int main(int argc, char **argv)
   bool bEqual = false;
   if(argc < 3 || argc > 4)
   {
-    cerr << endl << "Usage: rosrun ORB_SLAM3 Mono_Inertial path_to_vocabulary path_to_settings [do_equalize]" << endl;
+    cerr << endl << "Usage: rosrun ORB_SLAM3 Mono_Inertial path_to_vocabulary path_to_settings islocalisation[1/0] //[do_equalize]" << endl;
     ros::shutdown();
     return 1;
   }
 
-
+  bool isLocalization = false;
+  int queue_imu_size = 1;
   if(argc==4)
   {
-    std::string sbEqual(argv[3]);
-    if(sbEqual == "true")
-      bEqual = true;
+    if(argv[3][0] == '1'){
+        isLocalization = true;
+        queue_imu_size = 100;
+        std::cout<<"Localisation mode"<<std::endl;
+    }
+    else
+        std::cout<<"Mapping mode"<<std::endl;
   }
 
+  string filename;
+
   // Create SLAM system. It initializes all system threads and gets ready to process frames.
-  ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_MONOCULAR,true);
+  ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_MONOCULAR,true, 0, filename, isLocalization);
 
   ImuGrabber imugb;
-  ImageGrabber igb(&SLAM,&imugb,bEqual); // TODO
+  ImageGrabber igb(&SLAM,&imugb,bEqual, isLocalization); // TODO
   
   // Maximum delay, 5 seconds
-  ros::Subscriber sub_imu = n.subscribe("/camera/imu", 1000, &ImuGrabber::GrabImu, &imugb); 
-  ros::Subscriber sub_img0 = n.subscribe("/camera/infra1/image_rect_raw", 100, &ImageGrabber::GrabImage,&igb);
+  ros::Subscriber sub_imu = n.subscribe("/camera/imu", queue_imu_size, &ImuGrabber::GrabImu, &imugb); 
+  ros::Subscriber sub_img0 = n.subscribe("/camera/infra1/image_rect_raw", 1, &ImageGrabber::GrabImage,&igb);
 
   std::thread sync_thread(&ImageGrabber::SyncWithImu,&igb);
 
@@ -176,7 +196,34 @@ void ImageGrabber::SyncWithImu()
       if(mbClahe)
         mClahe->apply(im,im);
 
-      mpSLAM->TrackMonocular(im,tIm,vImuMeas);
+      Sophus::SE3f last_tf = mpSLAM->TrackMonocular(im,tIm,vImuMeas);
+      last_tf = last_tf.inverse();
+
+      Eigen::Quaterniond quaternion(last_tf.rotationMatrix().cast<double>());
+      Eigen::Vector3f translation = last_tf.translation();
+      // last_tf = convertion_tf*last_tf;
+
+      // //rotate by x
+      // Eigen::Quaterniond rotation(
+      //   std::sqrt(0.5), std::sqrt(0.5), 0.0, 0.0
+      // );
+
+      transformStamped.header.stamp = ros::Time::now();
+
+      transformStamped.transform.translation.x = translation.x();
+      transformStamped.transform.translation.y = translation.y();
+      transformStamped.transform.translation.z = translation.z();
+
+      //std::cout << translation.x() << std::endl;
+
+      transformStamped.transform.rotation.x = quaternion.x();
+      transformStamped.transform.rotation.y = quaternion.y();
+      transformStamped.transform.rotation.z = quaternion.z();
+      transformStamped.transform.rotation.w = quaternion.w();
+
+      broadcaster.sendTransform(transformStamped);
+
+      rate.sleep();
     }
 
     std::chrono::milliseconds tSleep(1);
