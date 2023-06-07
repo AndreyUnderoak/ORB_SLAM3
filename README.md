@@ -1,3 +1,18 @@
+# HOW TO RUN theeese...(installing below)
+Перейти в папку ORB_SLAM3
+```
+rosrun ORB_SLAM3 Stereo_Inertial Vocabulary/ORBvoc.txt Examples/Stereo-Inertial/RealSense_D435i_save.yaml false 0
+```
+Вместо Stereo_Inertial можно использовать Mono_Inertial (должен работать, но мы не тестили)
+
+RealSense_D435i_save.yaml - это конфиг, который сохраняет карту (ИСПОЛЬЗОВАТЬ ДЛЯ КАРТИРОВАНИЯ)
+RealSense_D435i_save.yaml - это конфиг, который загружает последнюю last карту (ИСПОЛЬЗОВАТЬ ДЛЯ ЛОКАЛИЗАЦИИ)
+Если используете Mono_Inertial, то и путь Mono-Inertial/RealSense_D435i_save.yaml
+
+Последний аргумент отвечает за режим:
+0 = картирование (с ним лучше сохранять карту)
+1 = локализация  (без загрузки карты работать не будет)
+
 # ORB-SLAM3
 
 ### V1.0, December 22th, 2021
