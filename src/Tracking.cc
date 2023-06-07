@@ -1682,9 +1682,9 @@ void Tracking::PreintegrateIMU()
     const int n = mvImuFromLastFrame.size()-1;
     if(n==0){
         cout << "Empty IMU measurements vector!!!\n";
+        mbVelocity = false;
         return;
     }
-
     IMU::Preintegrated* pImuPreintegratedFromLastFrame = new IMU::Preintegrated(mLastFrame.mImuBias,mCurrentFrame.mImuCalib);
 
     for(int i=0; i<n; i++)
@@ -1872,12 +1872,18 @@ void Tracking::Track()
     }
     mLastProcessedState=mState;
 
+    // System is initialized. Track Frame.
+    bool bOK;
     if ((mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO || mSensor == System::IMU_RGBD) && !mbCreatedMap)
     {
 #ifdef REGISTER_TIMES
         std::chrono::steady_clock::time_point time_StartPreIMU = std::chrono::steady_clock::now();
 #endif
+        
         PreintegrateIMU();
+        // if(!mbVelocity && (mSensor==System::STEREO || mSensor==System::RGBD || mSensor==System::IMU_STEREO || mSensor==System::IMU_RGBD))
+        //     bOK = false;
+
 #ifdef REGISTER_TIMES
         std::chrono::steady_clock::time_point time_EndPreIMU = std::chrono::steady_clock::now();
 
@@ -1891,7 +1897,6 @@ void Tracking::Track()
     unique_lock<mutex> lock(pCurrentMap->mMutexMapUpdate);
 
     mbMapUpdated = false;
-
     int nCurMapChangeIndex = pCurrentMap->GetMapChangeIndex();
     int nMapChangeIndex = pCurrentMap->GetLastMapChange();
     if(nCurMapChangeIndex>nMapChangeIndex)
@@ -1899,7 +1904,6 @@ void Tracking::Track()
         pCurrentMap->SetLastMapChange(nCurMapChangeIndex);
         mbMapUpdated = true;
     }
-
     if(mState==NOT_INITIALIZED)
     {
         if(mSensor==System::STEREO || mSensor==System::RGBD || mSensor==System::IMU_STEREO || mSensor==System::IMU_RGBD)
@@ -1926,8 +1930,7 @@ void Tracking::Track()
     }
     else
     {
-        // System is initialized. Track Frame.
-        bool bOK;
+        
 
 #ifdef REGISTER_TIMES
         std::chrono::steady_clock::time_point time_StartPosePred = std::chrono::steady_clock::now();
@@ -2127,7 +2130,6 @@ void Tracking::Track()
                 }
             }
         }
-
         if(!mCurrentFrame.mpReferenceKF)
             mCurrentFrame.mpReferenceKF = mpReferenceKF;
 
@@ -2159,9 +2161,9 @@ void Tracking::Track()
             // a local map and therefore we do not perform TrackLocalMap(). Once the system relocalizes
             // the camera we will use the local map again.
             if(bOK && !mbVO){
-                //std::cout<<"TrackLocal START"<<std::endl;
+                std::cout<<"TrackLocal START"<<std::endl;
                 bOK = TrackLocalMap();
-                //std::cout<<"TrackLocal END"<<std::endl;
+                std::cout<<"TrackLocal END"<<std::endl;
             }
         }
 
@@ -2177,7 +2179,6 @@ void Tracking::Track()
                     cout << "IMU is not or recently initialized. Reseting active map..." << endl;
                     mpSystem->ResetActiveMap();
                 }
-
                 mState=RECENTLY_LOST;
             }
             else

@@ -170,7 +170,7 @@ int main(int argc, char **argv)
     }
 
   // Maximum delay, 5 seconds
-  ros::Subscriber sub_imu = n.subscribe("/camera/imu", 1, &ImuGrabber::GrabImu, &imugb); 
+  ros::Subscriber sub_imu = n.subscribe("/camera/imu", 100, &ImuGrabber::GrabImu, &imugb); 
   ros::Subscriber sub_img_left = n.subscribe("/camera/infra1/image_rect_raw", 1, &ImageGrabber::GrabImageLeft,&igb);
   ros::Subscriber sub_img_right = n.subscribe("/camera/infra2/image_rect_raw", 1, &ImageGrabber::GrabImageRight,&igb);
 
@@ -318,7 +318,7 @@ void ImageGrabber::SyncWithImu()
       transformStamped.transform.translation.y = translation.y();
       transformStamped.transform.translation.z = translation.z();
 
-      std::cout << translation.x() << std::endl;
+      //std::cout << translation.x() << std::endl;
 
       transformStamped.transform.rotation.x = quaternion.x();
       transformStamped.transform.rotation.y = quaternion.y();
