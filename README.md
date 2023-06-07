@@ -17,6 +17,18 @@ RealSense_D435i_load.yaml - это конфиг, который загружае
 
 1 = локализация  (без загрузки карты работать не будет)
 
+### Для локализации на специфической карте, нужно перейти в RealSense_D435i.yaml и в конце файла указать его название так (без .osa)
+```
+System.LoadAtlasFromFile: "last"
+```
+### Топики нужные для работы!!!
+/camera/imu
+
+/camera/infra1/image_rect_raw
+
+для стерео +
+
+/camera/infra2/image_rect_raw
 
 # ORB-SLAM3
 
