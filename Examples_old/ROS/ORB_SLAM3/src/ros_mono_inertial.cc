@@ -53,6 +53,10 @@ public:
 class ImageGrabber
 {
 public:
+    tf2_ros::TransformBroadcaster broadcaster;
+    geometry_msgs::TransformStamped transformStamped;
+    ros::Rate rate = ros::Rate(10.0);
+    
     ImageGrabber(ORB_SLAM3::System* pSLAM, ImuGrabber *pImuGb, const bool bClahe, const bool isLocalisation):
     mpSLAM(pSLAM), mpImuGb(pImuGb), mbClahe(bClahe){
       if(isLocalisation){
