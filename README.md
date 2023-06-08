@@ -28,11 +28,23 @@ System.LoadAtlasFromFile: "last"
 ### Топики нужные для работы!!!
 /camera/imu
 
+следующие 2 топика должны быть запущены с разрешением: 
+
+width: 640
+height: 480
+
+
 /camera/infra1/image_rect_raw
 
 для стерео +
 
 /camera/infra2/image_rect_raw
+
+Пример запуска roslaunch realsense2_camera:
+
+```
+roslaunch realsense2_camera rs_camera.launch enable_depth:=true depth_width:=640 depth_height:=480 depth_fps:=30 enable_infra1:=true infra_width:=640 infra_height:=480 enable_infra2:=true enable_gyro:=true enable_accel:=true unite_imu_method:=linear_interpolation filters:=pointcloud
+```
 
 # ORB-SLAM3
 
