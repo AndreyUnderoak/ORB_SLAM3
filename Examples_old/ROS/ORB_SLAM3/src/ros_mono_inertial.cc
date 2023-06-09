@@ -120,8 +120,8 @@ int main(int argc, char **argv)
   ImageGrabber igb(&SLAM,&imugb,bEqual, isLocalization); // TODO
   
   // Maximum delay, 5 seconds
-  ros::Subscriber sub_imu = n.subscribe("/camera/imu", queue_imu_size, &ImuGrabber::GrabImu, &imugb); 
-  ros::Subscriber sub_img0 = n.subscribe("/camera/infra1/image_rect_raw", 1, &ImageGrabber::GrabImage,&igb);
+  ros::Subscriber sub_imu = n.subscribe("/r1/r1_imu", 100, &ImuGrabber::GrabImu, &imugb); 
+  ros::Subscriber sub_img0 = n.subscribe("/r1/r1_front_camera/image_raw", 1, &ImageGrabber::GrabImage,&igb);
 
   std::thread sync_thread(&ImageGrabber::SyncWithImu,&igb);
 

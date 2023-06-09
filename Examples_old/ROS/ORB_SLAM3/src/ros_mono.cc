@@ -54,13 +54,15 @@ int main(int argc, char **argv)
         return 1;
     }    
 
+    string filename;
+
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::MONOCULAR,true);
+    ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::MONOCULAR,true, 0, filename, false);
 
     ImageGrabber igb(&SLAM);
 
     ros::NodeHandle nodeHandler;
-    ros::Subscriber sub = nodeHandler.subscribe("/camera/image_raw", 1, &ImageGrabber::GrabImage,&igb);
+    ros::Subscriber sub = nodeHandler.subscribe("/r1/r1_front_camera/image_raw", 1, &ImageGrabber::GrabImage,&igb);
 
     ros::spin();
 
