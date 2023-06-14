@@ -8,27 +8,24 @@ File.version: "1.0"
 Camera.type: "PinHole"
 
 # Camera calibration and distortion parameters (OpenCV) 
-Camera1.fx: 929.562627
-Camera1.fy: 487.474037
-Camera1.cx: 928.604856
-Camera1.cy: 363.165223
+Camera1.fx: 927.54882
+Camera1.fy: 926.78333
+Camera1.cx: 474.27081
+Camera1.cy: 60.10357
 
-Camera1.k1: -0.016272
-Camera1.k2: 0.093492
-Camera1.p1: 0.000093
-Camera1.p2: 0.002999
-Camera1.k3: 0.000000
+Camera1.k1: 0.0
+Camera1.k2: 0.0
+Camera1.p1: 0.0
+Camera1.p2: 0.0
 
-
-# Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
-Camera.RGB: 1
 
 # Camera resolution
-Camera.width: 640
-Camera.height: 360
+Camera.width: 960
+Camera.height: 720
 
 # Camera frames per second 
 Camera.fps: 20
+
 
 # Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
 Camera.RGB: 1
@@ -38,16 +35,19 @@ IMU.T_b_c1: !!opencv-matrix
    rows: 4
    cols: 4
    dt: f
-   data: [-0.9995250378696743, 0.0075019185074052044, -0.02989013031643309, 0.045574835649698026, 
-          0.029615343885863205, -0.03439736061393144, -0.998969345370175, -0.071161801837997044,
-         -0.008522328211654736, -0.9993800792498829, 0.03415885127385616, -0.044681254117144367,
+   data: [1, 0, 0, 0.034, 
+          0, 1, 0, 0.0,
+          0, 0, 1, 0.001,
           0.0, 0.0, 0.0, 1.0]
 
+# Do not insert KFs when recently lost
+IMU.InsertKFsWhenLost: 0
+
 # IMU noise (Use those from VINS-mono)
-IMU.NoiseGyro: 0.00016 # rad/s^0.5 
-IMU.NoiseAcc: 0.0028 # m/s^1.5
-IMU.GyroWalk: 0.000022 # rad/s^1.5
-IMU.AccWalk: 0.00086 # m/s^2.5
+IMU.NoiseGyro: 1e-10 # 2.44e-4 #1e-3 # rad/s^0.5
+IMU.NoiseAcc: 1e-10 # 1.47e-3 #1e-2 # m/s^1.5
+IMU.GyroWalk: 1e-10 # rad/s^1.5
+IMU.AccWalk: 1e-10 # m/s^2.5
 IMU.Frequency: 200.0
 
 
@@ -56,7 +56,7 @@ IMU.Frequency: 200.0
 #--------------------------------------------------------------------------------------------
 
 # ORB Extractor: Number of features per image
-ORBextractor.nFeatures: 1500 # Tested with 1250
+ORBextractor.nFeatures: 1250 # Tested with 1250
 
 # ORB Extractor: Scale factor between levels in the scale pyramid 	
 ORBextractor.scaleFactor: 1.2
@@ -84,3 +84,5 @@ Viewer.ViewpointX: 0.0
 Viewer.ViewpointY: -0.7
 Viewer.ViewpointZ: -3.5
 Viewer.ViewpointF: 500.0
+
+System.SaveAtlasToFile: "last"
