@@ -90,7 +90,7 @@ COPY . /workspace/ros_ws/src/ORB_SLAM3
 WORKDIR /workspace/ros_ws
 RUN /bin/bash -ci "catkin build"
 
-RUN echo "export ROS_PACKAGE_PATH=:/workspace/ros_ws/src/ORB_SLAM3/Examples_old/ROS/ORB_SLAM3:$ROS_PACKAGE_PATH" >> ~/.bashrc
+RUN echo "export ROS_PACKAGE_PATH=:/workspace/ros_ws/src/ORB_SLAM3/Examples_old/ROS/ORB_SLAM3:\$ROS_PACKAGE_PATH" >> ~/.bashrc
 
 RUN cd src/ORB_SLAM3 && \
  	./build.sh
