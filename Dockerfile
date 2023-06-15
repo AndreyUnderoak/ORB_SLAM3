@@ -90,8 +90,12 @@ COPY . /workspace/ros_ws/src/ORB_SLAM3
 WORKDIR /workspace/ros_ws
 RUN /bin/bash -ci "catkin build"
 
+RUN echo "export ROS_PACKAGE_PATH=${ROS_PACKAGE_PATH}:/workspace/ros_ws/src/ORB_SLAM3/Examples_old/ROS/ORB_SLAM3" >> ~/.bashrc
+
 RUN cd src/ORB_SLAM3 && \
  	./build.sh
+
+
 
 # RUN mkdir -p src && cd src && \
 #     git clone https://github.com/AndreyUnderoak/ORB_SLAM3.git &&\
