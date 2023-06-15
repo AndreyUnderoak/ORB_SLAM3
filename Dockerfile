@@ -78,12 +78,19 @@ RUN cd && \
 	cmake ../ &&\
 	make && make install
 
+RUN cd && \
+	git clone https://github.com/OctoMap/octomap.git &&\
+	cd octomap && \
+	mkdir build && \
+	cd build && \
+	cmake .. &&\
+	make && make install
+
 COPY . /workspace/ros_ws/src/ORB_SLAM3
 WORKDIR /workspace/ros_ws
 RUN /bin/bash -ci "catkin build"
 
 RUN cd src/ORB_SLAM3 && \
-	rm -r build && \
  	./build.sh
 
 # RUN mkdir -p src && cd src && \
