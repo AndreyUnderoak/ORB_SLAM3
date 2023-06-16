@@ -55,7 +55,7 @@ RUN git clone https://github.com/stevenlovegrove/Pangolin.git && \
 	cd Pangolin && mkdir build && cd build && \
 	cmake .. -D CMAKE_BUILD_TYPE=Release && \ 
 	make -j$(nproc) && \ 
-	make installcd
+	make install
 
 RUN git clone https://github.com/IntelRealSense/librealsense.git &&\
 	cd librealsense && mkdir build && cd build && \
