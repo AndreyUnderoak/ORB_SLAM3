@@ -154,7 +154,8 @@ public:
     // DEBUG: show KFs which are used in LBA
     std::set<long unsigned int> msOptKFs;
     std::set<long unsigned int> msFixedKFs;
-
+    long unsigned int mnMaxKFid;
+    
 protected:
 
     long unsigned int mnId;
@@ -180,7 +181,7 @@ protected:
     int mnMapChangeNotified;
 
     long unsigned int mnInitKFid;
-    long unsigned int mnMaxKFid;
+    
     //long unsigned int mnLastLoopKFid;
 
     // Index related to a big change in the map (loop closure, global BA)

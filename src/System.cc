@@ -176,7 +176,14 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
         //LOAD LOADED MAP!!!
         if(mbActivateLocalizationMode){
             vector<Map*> map_vector = mpAtlas->GetAllMaps();
-            mpAtlas->ChangeMap(map_vector.at(0));
+            std::cout<<"Number of Maps: "<< map_vector.size()<<std::endl;
+            int biggest = 0;
+            for(int i = 0; i < map_vector.size(); i++){
+                std::cout<< i <<" : "<< map_vector.at(i)->mnMaxKFid <<std::endl;
+                if(map_vector.at(i)->mnMaxKFid > map_vector.at(biggest)->mnMaxKFid)
+                    biggest = i;
+            }
+            mpAtlas->ChangeMap(map_vector.at(biggest));
         }else
           mpAtlas->CreateNewMap();
 

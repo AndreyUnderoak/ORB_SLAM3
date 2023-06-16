@@ -81,5 +81,5 @@ Viewer.ViewpointY: -0.7
 Viewer.ViewpointZ: -3.5
 Viewer.ViewpointF: 500.0
 
-System.LoadAtlasFromFile: "sprint_stairs"
-#System.SaveAtlasToFile: "sprint_501"
+#System.LoadAtlasFromFile: "lab_449_24_05"
+System.SaveAtlasToFile: "loc06"
