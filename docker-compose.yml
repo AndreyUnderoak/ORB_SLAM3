@@ -1,0 +1,58 @@
+version: '3.9'
+name: 'vins-fusion'
+
+services:
+  roscore:
+    image: registry.gitlab.com/beerlab/cpc/utils/realsense_docker:latest
+    container_name: roscore
+    command: ["/bin/bash", "-ci", "roslaunch realsense2_camera rs_camera.launch
+                                  enable_depth:=true
+                                  depth_width:=640 depth_height:=480
+                                  depth_fps:=30
+                                  enable_infra1:=true
+                                  enable_infra2:=true
+                                  infra_width:=640 infra_height:=480
+                                  enable_gyro:=true
+                                  enable_accel:=true
+                                  unite_imu_method:=linear_interpolation
+                                  filters:=pointcloud"]
+    environment:
+      - DISPLAY
+      - XAUTORITY
+      - QT_X11_NO_MITSHM=1
+    ipc: host
+    stdin_open: true
+    tty: true
+    networks:
+      - general
+    privileged: true
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /etc/localtime:/etc/localtime:ro
+      - /dev:/dev
+
+  orb:
+    image: registry.gitlab.com/beerlab/cpc/slam/orb_slam3:latest
+    container_name: orb-slam
+    # command: ["/bin/bash", "-ci", ""]
+    environment:
+      - ROS_MASTER_URI=http://roscore:11311
+      - DISPLAY
+      - XAUTORITY
+      - QT_X11_NO_MITSHM=1
+    ipc: host
+    stdin_open: true
+    tty: true
+    networks:
+      - general
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /etc/localtime:/etc/localtime:ro
+      - /dev:/dev
+
+networks:
+  general:
+    attachable: true
+    internal: false
+    driver: bridge
+
