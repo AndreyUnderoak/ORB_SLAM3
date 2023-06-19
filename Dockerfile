@@ -81,7 +81,7 @@ RUN catkin build
 RUN echo "export ROS_PACKAGE_PATH=:/workspace/ros_ws/src/ORB_SLAM3/Examples_old/ROS/ORB_SLAM3:\$ROS_PACKAGE_PATH" >> ~/.bashrc
 
 RUN cd src/ORB_SLAM3 && \
- 	./build.sh && \
-	./build_ros.sh
+	sh build.sh && \
+	sh build_ros.sh
 
 CMD ["/bin/bash", "-ci", "cd /workspace/ros_ws/src/ORB_SLAM3 && rosrun ORB_SLAM3 Stereo_Inertial Vocabulary/ORBvoc.txt Examples/Stereo-Inertial/RealSense_D435i_save.yaml false 0"]
