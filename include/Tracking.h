@@ -360,14 +360,14 @@ protected:
     Sophus::SE3f mTlr;
 
     void newParameterLoader(Settings* settings);
-
+    
+    std::mutex mMutexStop;
 #ifdef REGISTER_LOOP
     bool Stop();
 
     bool mbStopped;
     bool mbStopRequested;
     bool mbNotStop;
-    std::mutex mMutexStop;
 #endif
 
 public:
