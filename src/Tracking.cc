@@ -2384,6 +2384,10 @@ void Tracking::StereoInitialization()
         else
             mCurrentFrame.SetPose(Sophus::SE3f());
 
+        // if(mbOnlyTracking){
+        //     std::cout<<"New map for loco init created"<<std::endl;
+        //     mpAtlas->CreateNewMap();
+        // }
         // Create KeyFrame
         KeyFrame* pKFini = new KeyFrame(mCurrentFrame,mpAtlas->GetCurrentMap(),mpKeyFrameDB);
 
@@ -2391,44 +2395,46 @@ void Tracking::StereoInitialization()
         mpAtlas->AddKeyFrame(pKFini);
 
         // Create MapPoints and asscoiate to KeyFrame
-        if(!mpCamera2){
-            for(int i=0; i<mCurrentFrame.N;i++)
-            {
-                float z = mCurrentFrame.mvDepth[i];
-                if(z>0)
+        if(!mbOnlyTracking){
+            if(!mpCamera2){
+                for(int i=0; i<mCurrentFrame.N;i++)
                 {
-                    Eigen::Vector3f x3D;
-                    mCurrentFrame.UnprojectStereo(i, x3D);
-                    MapPoint* pNewMP = new MapPoint(x3D, pKFini, mpAtlas->GetCurrentMap());
-                    pNewMP->AddObservation(pKFini,i);
-                    pKFini->AddMapPoint(pNewMP,i);
-                    pNewMP->ComputeDistinctiveDescriptors();
-                    pNewMP->UpdateNormalAndDepth();
-                    mpAtlas->AddMapPoint(pNewMP);
+                    float z = mCurrentFrame.mvDepth[i];
+                    if(z>0)
+                    {
+                        Eigen::Vector3f x3D;
+                        mCurrentFrame.UnprojectStereo(i, x3D);
+                        MapPoint* pNewMP = new MapPoint(x3D, pKFini, mpAtlas->GetCurrentMap());
+                        pNewMP->AddObservation(pKFini,i);
+                        pKFini->AddMapPoint(pNewMP,i);
+                        pNewMP->ComputeDistinctiveDescriptors();
+                        pNewMP->UpdateNormalAndDepth();
+                        mpAtlas->AddMapPoint(pNewMP);
 
-                    mCurrentFrame.mvpMapPoints[i]=pNewMP;
+                        mCurrentFrame.mvpMapPoints[i]=pNewMP;
+                    }
                 }
-            }
-        } else{
-            for(int i = 0; i < mCurrentFrame.Nleft; i++){
-                int rightIndex = mCurrentFrame.mvLeftToRightMatch[i];
-                if(rightIndex != -1){
-                    Eigen::Vector3f x3D = mCurrentFrame.mvStereo3Dpoints[i];
+            } else{
+                for(int i = 0; i < mCurrentFrame.Nleft; i++){
+                    int rightIndex = mCurrentFrame.mvLeftToRightMatch[i];
+                    if(rightIndex != -1){
+                        Eigen::Vector3f x3D = mCurrentFrame.mvStereo3Dpoints[i];
 
-                    MapPoint* pNewMP = new MapPoint(x3D, pKFini, mpAtlas->GetCurrentMap());
+                        MapPoint* pNewMP = new MapPoint(x3D, pKFini, mpAtlas->GetCurrentMap());
 
-                    pNewMP->AddObservation(pKFini,i);
-                    pNewMP->AddObservation(pKFini,rightIndex + mCurrentFrame.Nleft);
+                        pNewMP->AddObservation(pKFini,i);
+                        pNewMP->AddObservation(pKFini,rightIndex + mCurrentFrame.Nleft);
 
-                    pKFini->AddMapPoint(pNewMP,i);
-                    pKFini->AddMapPoint(pNewMP,rightIndex + mCurrentFrame.Nleft);
+                        pKFini->AddMapPoint(pNewMP,i);
+                        pKFini->AddMapPoint(pNewMP,rightIndex + mCurrentFrame.Nleft);
 
-                    pNewMP->ComputeDistinctiveDescriptors();
-                    pNewMP->UpdateNormalAndDepth();
-                    mpAtlas->AddMapPoint(pNewMP);
+                        pNewMP->ComputeDistinctiveDescriptors();
+                        pNewMP->UpdateNormalAndDepth();
+                        mpAtlas->AddMapPoint(pNewMP);
 
-                    mCurrentFrame.mvpMapPoints[i]=pNewMP;
-                    mCurrentFrame.mvpMapPoints[rightIndex + mCurrentFrame.Nleft]=pNewMP;
+                        mCurrentFrame.mvpMapPoints[i]=pNewMP;
+                        mCurrentFrame.mvpMapPoints[rightIndex + mCurrentFrame.Nleft]=pNewMP;
+                    }
                 }
             }
         }
@@ -2454,8 +2460,20 @@ void Tracking::StereoInitialization()
         mpAtlas->GetCurrentMap()->mvpKeyFrameOrigins.push_back(pKFini);
 
         mpMapDrawer->SetCurrentCameraPose(mCurrentFrame.GetPose());
+        
+        
 
-        mState=OK;
+        if(mbOnlyTracking){
+            std::cout<<"New map for loco init created"<<std::endl;
+            // mpAtlas->SetBiggestMap();
+            mpAtlas->GetCurrentMap()->EraseKeyFrame(pKFini);
+            mState=LOST;
+            
+        }else{
+            mState=OK;
+        }
+
+        
     }
 }
 

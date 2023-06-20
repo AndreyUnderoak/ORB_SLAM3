@@ -79,6 +79,8 @@ public:
     void CreateNewMap();
     void ChangeMap(Map* pMap);
 
+    void SetBiggestMap();
+
     unsigned long int GetLastInitKFid();
 
     void SetViewer(Viewer* pViewer);

@@ -89,6 +89,30 @@ void Atlas::ChangeMap(Map* pMap)
     mpCurrentMap->IncreaseChangeIndex();
 }
 
+void Atlas::SetBiggestMap()
+{
+    //Find Biggest map
+    vector<Map*> map_vector = GetAllMaps();
+    int biggest = 0;
+    for(int i = 0; i < map_vector.size(); i++){
+        std::cout<< i <<" : "<< map_vector.at(i)->mnMaxKFid <<std::endl;
+        if(map_vector.at(i)->GetAllKeyFrames().size() > map_vector.at(biggest)->GetAllKeyFrames().size())
+            biggest = i;
+    }
+    Map* pMap = map_vector.at(biggest);
+
+    //Change map
+    unique_lock<mutex> lock(mMutexAtlas);
+    cout << "Change to map with id: " << pMap->GetId() << endl;
+    if(mpCurrentMap){
+        mpCurrentMap->SetStoredMap();
+    }
+
+    mpCurrentMap = pMap;
+    mpCurrentMap->SetCurrentMap();
+    mpCurrentMap->IncreaseChangeIndex();
+}
+
 unsigned long int Atlas::GetLastInitKFid()
 {
     unique_lock<mutex> lock(mMutexAtlas);
