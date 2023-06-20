@@ -1892,6 +1892,10 @@ void Tracking::Track()
 #endif
 
     }
+    
+    if(mbCreatedMap && mbOnlyTracking)
+        mpAtlas->SetBiggestMap();
+
     mbCreatedMap = false;
     // Get Map Mutex -> Map cannot be changed
     unique_lock<mutex> lock(pCurrentMap->mMutexMapUpdate);
