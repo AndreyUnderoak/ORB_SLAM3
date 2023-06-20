@@ -2462,7 +2462,8 @@ void Tracking::StereoInitialization()
         mpMapDrawer->SetCurrentCameraPose(mCurrentFrame.GetPose());
         
         
-
+        unique_lock<mutex> lock(mMutexStop);
+        
         if(mbOnlyTracking){
             std::cout<<"New map for loco init created"<<std::endl;
             // mpAtlas->SetBiggestMap();
