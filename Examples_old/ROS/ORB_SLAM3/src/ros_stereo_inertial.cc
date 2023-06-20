@@ -302,7 +302,20 @@ void ImageGrabber::SyncWithImu()
         cv::remap(imRight,imRight,M1r,M2r,cv::INTER_LINEAR);
       }
 
-      Sophus::SE3f last_tf = mpSLAM->TrackStereo(imLeft,imRight,tImLeft,vImuMeas);
+      int last_state = mpSLAM->GetTrackingState();
+
+      Sophus::SE3f before_lost_tf;
+      Sophus::SE3f last_tf;
+
+      if(last_state==LOST){
+        before_lost_tf = mpSLAM->TrackStereo(imLeft,imRight,tImLeft,vImuMeas);
+        last_tf = before_lost_tf;
+      }
+      else
+        last_tf = mpSLAM->TrackStereo(imLeft,imRight,tImLeft,vImuMeas);
+
+      
+
       last_tf = last_tf.inverse();
 
       Eigen::Quaterniond quaternion(last_tf.rotationMatrix().cast<double>());
