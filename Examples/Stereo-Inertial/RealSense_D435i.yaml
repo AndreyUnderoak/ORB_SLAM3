@@ -81,5 +81,5 @@ Viewer.ViewpointY: -0.7
 Viewer.ViewpointZ: -3.5
 Viewer.ViewpointF: 500.0
 
-System.LoadAtlasFromFile: "loc07"
-#System.SaveAtlasToFile: "loc07"
+System.LoadAtlasFromFile: "rosbag_501_rs"
+#System.SaveAtlasToFile: "rosbag_501_rs"
