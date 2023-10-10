@@ -28,41 +28,82 @@
 #include<opencv2/core/core.hpp>
 #include "opencv2/imgcodecs/legacy/constants_c.h"
 
+#include <tf2_ros/transform_broadcaster.h>
+#include <geometry_msgs/TransformStamped.h>
+
 #include"../../../include/System.h"
+#include <std_msgs/Int32.h>
 
 using namespace std;
 
 class ImageGrabber
 {
 public:
-    ImageGrabber(ORB_SLAM3::System* pSLAM):mpSLAM(pSLAM){}
+    tf2_ros::TransformBroadcaster broadcaster;
+    geometry_msgs::TransformStamped transformStamped;
+    ros::Rate rate = ros::Rate(10.0);
+
+    ImageGrabber(ORB_SLAM3::System* pSLAM, const bool isLocalisation):mpSLAM(pSLAM){
+        if(isLocalisation){
+            transformStamped.header.frame_id = "parent_frame";  // parent_frame
+            transformStamped.child_frame_id  = "child_frame";   // child_frame
+        }
+        else{
+            transformStamped.header.frame_id = "orb_static_frame";  // parent_frame
+            transformStamped.child_frame_id  = "orb_dynamic_frame";   // child_frame
+        }
+    }
 
     void GrabImage(const sensor_msgs::ImageConstPtr& msg);
 
     ORB_SLAM3::System* mpSLAM;
 };
 
+ros::Publisher statePublisher_;
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "Mono");
     ros::start();
 
-    if(argc != 3)
+    if(argc != 5)
     {
-        cerr << endl << "Usage: rosrun ORB_SLAM3 Mono path_to_vocabulary path_to_settings" << endl;        
+        cerr << endl << "Usage: rosrun ORB_SLAM3 Mono path_to_vocabulary path_to_settings show_gui[true/false] islocalisation[true/false]" << endl;        
         ros::shutdown();
         return 1;
-    }    
+    }   
+
+    std::string suseGui(argv[3]);
+    std::string sisLocalization(argv[4]); 
+
+    bool useGui = true;
+    bool isLocalization = false;
+
+    if(suseGui == "false"){
+      useGui = false;
+      std::cout<<"Gui disabled"<<std::endl;
+    }
+    else
+        std::cout<<"Gui enabled"<<std::endl;
+
+    if(sisLocalization == "true"){
+        isLocalization = true;
+        std::cout<<"Localisation mode"<<std::endl;
+    }
+    else
+        std::cout<<"Mapping mode"<<std::endl;
 
     string filename;
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::MONOCULAR,true, 0, filename, false);
+    ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::MONOCULAR, useGui, 0, filename, isLocalization);
 
-    ImageGrabber igb(&SLAM);
+    ImageGrabber igb(&SLAM, isLocalization);
 
     ros::NodeHandle nodeHandler;
-    ros::Subscriber sub = nodeHandler.subscribe("/r1/r1_front_camera/image_raw", 1, &ImageGrabber::GrabImage,&igb);
+    ros::Subscriber sub = nodeHandler.subscribe("/camera/infra1/image_rect_raw", 10, &ImageGrabber::GrabImage,&igb);
+    statePublisher_ = nodeHandler.advertise<std_msgs::Int32>("/nav_state", 1);
+
 
     ros::spin();
 
@@ -91,7 +132,38 @@ void ImageGrabber::GrabImage(const sensor_msgs::ImageConstPtr& msg)
         return;
     }
 
-    mpSLAM->TrackMonocular(cv_ptr->image,cv_ptr->header.stamp.toSec());
+    Sophus::SE3f last_tf = mpSLAM->TrackMonocular(cv_ptr->image,cv_ptr->header.stamp.toSec());
+    last_tf = last_tf.inverse();
+
+    Eigen::Quaterniond quaternion(last_tf.rotationMatrix().cast<double>());
+    Eigen::Vector3f translation = last_tf.translation();
+    // last_tf = convertion_tf*last_tf;
+
+    // //rotate by x
+    // Eigen::Quaterniond rotation(
+    //   std::sqrt(0.5), std::sqrt(0.5), 0.0, 0.0
+    // );
+
+    transformStamped.header.stamp = ros::Time::now();
+
+    transformStamped.transform.translation.x = translation.x();
+    transformStamped.transform.translation.y = translation.y();
+    transformStamped.transform.translation.z = translation.z();
+
+    //std::cout << translation.x() << std::endl;
+
+    transformStamped.transform.rotation.x = quaternion.x();
+    transformStamped.transform.rotation.y = quaternion.y();
+    transformStamped.transform.rotation.z = quaternion.z();
+    transformStamped.transform.rotation.w = quaternion.w();
+
+    broadcaster.sendTransform(transformStamped);
+    
+    std_msgs::Int32 state_msg;
+    state_msg.data = static_cast<int>(mpSLAM->GetTrackingState());
+    statePublisher_.publish(state_msg);
+
+    rate.sleep();
 }
 
 
