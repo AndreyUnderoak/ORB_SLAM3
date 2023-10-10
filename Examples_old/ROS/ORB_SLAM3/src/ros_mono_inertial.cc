@@ -90,38 +90,50 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "Mono_Inertial");
   ros::NodeHandle n("~");
   ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
-  bool bEqual = false;
-  if(argc < 3 || argc > 4)
+
+  if(argc != 5)
   {
-    cerr << endl << "Usage: rosrun ORB_SLAM3 Mono_Inertial path_to_vocabulary path_to_settings islocalisation[1/0] //[do_equalize]" << endl;
+    cerr << endl << "Usage: rosrun ORB_SLAM3 Mono_Inertial path_to_vocabulary path_to_settings show_gui[true/false] islocalisation[true/false] //[do_equalize]" << endl;
     ros::shutdown();
     return 1;
   }
 
+  std::string suseGui(argv[3]);
+  std::string sisLocalization(argv[4]);
+
+
+  bool useGui = true;
   bool isLocalization = false;
+  bool bEqual = false;
+  
   int queue_imu_size = 1;
-  if(argc==4)
-  {
-    if(argv[3][0] == '1'){
-        isLocalization = true;
-        queue_imu_size = 100;
-        std::cout<<"Localisation mode"<<std::endl;
-    }
-    else
-        std::cout<<"Mapping mode"<<std::endl;
+
+  if(suseGui == "false"){
+      useGui = false;
+      std::cout<<"Gui disabled"<<std::endl;
   }
+  else
+      std::cout<<"Gui enabled"<<std::endl;
+
+  if(sisLocalization == "true"){
+      isLocalization = true;
+      queue_imu_size = 100;
+      std::cout<<"Localisation mode"<<std::endl;
+  }
+  else
+      std::cout<<"Mapping mode"<<std::endl;
 
   string filename;
 
   // Create SLAM system. It initializes all system threads and gets ready to process frames.
-  ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_MONOCULAR,true, 0, filename, isLocalization);
+  ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_MONOCULAR,useGui, 0, filename, isLocalization);
 
   ImuGrabber imugb;
   ImageGrabber igb(&SLAM,&imugb,bEqual, isLocalization); // TODO
   
   // Maximum delay, 5 seconds
-  ros::Subscriber sub_imu = n.subscribe("/r1/r1_imu", 1, &ImuGrabber::GrabImu, &imugb); 
-  ros::Subscriber sub_img0 = n.subscribe("/r1/r1_front_camera/image_raw", 1, &ImageGrabber::GrabImage,&igb);
+  ros::Subscriber sub_imu = n.subscribe("/ardrone/imu", queue_imu_size, &ImuGrabber::GrabImu, &imugb); 
+  ros::Subscriber sub_img0 = n.subscribe("/ardrone/front/image_raw", 1, &ImageGrabber::GrabImage,&igb);
 
   std::thread sync_thread(&ImageGrabber::SyncWithImu,&igb);
 
